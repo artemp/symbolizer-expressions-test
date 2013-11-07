@@ -2,10 +2,8 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <unordered_map>
 #include <boost/variant.hpp>
-#include <boost/timer/timer.hpp>
-#include <boost/lexical_cast.hpp>
+#include "timer.hpp"
 #include <boost/any.hpp>
 #include <boost/spirit/include/support_utree.hpp>
 // mapnik
@@ -17,8 +15,6 @@
 #include <mapnik/path_expression.hpp>
 #include <mapnik/parse_path.hpp>
 #include <mapnik/symbolizer.hpp>
-
-#define BOOST_REGEX_HAS_ICU
 
 namespace test {
 
@@ -136,7 +132,7 @@ struct extract_value : public boost::static_visitor<T1>
     template <typename T2>
     auto operator() (T2 const& val) const -> result_type
     {
-        std::cerr << val << " " << typeid(val).name() <<" " << typeid(result_type).name() << std::endl;
+        //std::cerr << val << " " << typeid(val).name() <<" " << typeid(result_type).name() << std::endl;
         return result_type();
     }
 
@@ -235,11 +231,11 @@ int main (int argc, char** argv)
 
      //
     {
+        progress_timer test1(std::clog,"test 1");
         mapnik::feature_ptr feature(mapnik::feature_factory::create(std::make_shared<mapnik::context_type>(),1));
         mapnik::transcoder tr("utf8");
         feature->put_new("name",tr.transcode("mapnik"));
         feature->put_new("val",123.4567);
-        boost::timer::auto_cpu_timer t;
         test::point_symbolizer sym;
         test::put<bool>(sym, "true", true);
         test::put<bool>(sym, "false", false);
@@ -254,11 +250,11 @@ int main (int argc, char** argv)
             bool true_ = test::get<bool>(sym,"true", *feature);
             bool false_ = test::get<bool>(sym,"false", *feature);
             double opacity = test::get<double>(sym,"opacity", *feature);
-            int num = test::get<int>(sym,"num", *feature);
+            mapnik::value_integer num = test::get<mapnik::value_integer>(sym,"num", *feature);
             std::string name= test::get<std::string>(sym,"name", *feature);
             mapnik::color fill = test::get<mapnik::color>(sym,"fill", *feature);
             std::string file_path = test::get<std::string>(sym,"file-path",*feature);
-            int expr = test::get<int>(sym,"expr",*feature);
+            mapnik::value_integer expr = test::get<mapnik::value_integer>(sym,"expr",*feature);
             mapnik::expression_ptr expr_ptr = test::get<mapnik::expression_ptr>(sym,"expr");
 
             if (i == 0)
@@ -277,7 +273,7 @@ int main (int argc, char** argv)
     }
 
     {
-        boost::timer::auto_cpu_timer t;
+        progress_timer test2(std::clog,"test 2");
         test::symbolizer_2 sym;
         sym.opacity = 0.5;
         sym.num = 123;
@@ -301,16 +297,16 @@ int main (int argc, char** argv)
 
 
     {
+        progress_timer test3(std::clog,"test 3");
         mapnik::feature_ptr feature(mapnik::feature_factory::create(std::make_shared<mapnik::context_type>(),1));
-        boost::timer::auto_cpu_timer t;
         test::symbolizer_4 sym;
         test::put<double>(sym, "opacity", 0.5);
-        test::put<int>(sym, "num", 123);
+        test::put<mapnik::value_integer>(sym, "num", 123LL);
         test::put<mapnik::value_unicode_string>(sym, "name", "testing");
         for (int i=0; i< NUM_RUNS;++i)
         {
             double opacity = test::get<double>(sym, "opacity", *feature);
-            int num = test::get<int>(sym, "num", *feature);
+            mapnik::value_integer num = test::get<mapnik::value_integer>(sym, "num", *feature);
             std::string name = test::get<std::string>(sym, "name", *feature);
             if (i == 0)
             {
